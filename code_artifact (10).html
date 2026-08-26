@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Сандар Әлеміне Саяхат</title>
+<style>
+  :root{
+    --sky-top:#8ecbff;
+    --sky-bottom:#eaf7ff;
+    --sun:#ffd35c;
+    --grass:#8fd67f;
+    --grass-dark:#6cc25a;
+    --coral:#ff8f6b;
+    --coral-dark:#ff7048;
+    --plum:#7c6cff;
+    --plum-dark:#6a58f0;
+    --ink:#3a3560;
+    --card:#ffffff;
+    --card-soft:#fff8ee;
+    --gold:#ffcc33;
+    --lock:#b9b3d6;
+    --success:#59c26a;
+    --shadow: 0 10px 0 rgba(58,53,96,0.14);
+    font-size: 18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    font-family: "Trebuchet MS","Segoe UI Rounded","Segoe UI",Verdana,sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    user-select:none;
+    overflow:hidden;
+    background-color: var(--sky-top);
+    color: var(--ink);
+  }
+  #app{ 
+    position:relative; width:100%; height:100%; overflow:hidden; 
+    background: url('fon1.jpeg') no-repeat center center;
+    background-size: cover;
+  }
+
+  /* ---------- map background ---------- */
+  .map-screen-container {
+    position: absolute; inset: 0;
+    overflow-x: auto; overflow-y: hidden;
+    background: #a9d9ff; z-index: 1;
+  }
+  .map-wrapper {
+    position: relative; height: 100%;
+    aspect-ratio: 16 / 9;
+    background: url('fon2.jpeg') no-repeat center center;
+    background-size: cover;
+    min-width: 1000px; /* Смартфондарда көлденең айналдыру үшін */
+    margin: 0 auto;
+  }
+
+  .screen{ position:relative; z-index:1; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2vh 3vw; animation: popIn .35s ease; }
+
+  /* ---------- buttons ---------- */
+  .btn{
+    border:none; border-radius:22px; cursor:pointer; font-family:inherit; font-weight:700;
+    color:#fff; padding:1.1em 2.2em; font-size:1.3rem; box-shadow: var(--shadow);
+    transition: transform .12s ease, box-shadow .12s ease; min-height:64px;
+  }
+  .btn:active{ transform: translateY(6px); box-shadow: 0 4px 0 rgba(58,53,96,0.14); }
+  .btn-primary{ background: linear-gradient(180deg, var(--coral) 0%, var(--coral-dark) 100%); }
+  .btn-secondary{ background: linear-gradient(180deg, var(--plum) 0%, var(--plum-dark) 100%); }
+  .btn-icon{
+    width:64px; height:64px; border-radius:50%; border:none; font-size:1.6rem; cursor:pointer;
+    background: #fff; box-shadow: var(--shadow); display:flex; align-items:center; justify-content:center;
+  }
+  .btn-icon:active{ transform: translateY(4px); box-shadow: 0 4px 0 rgba(58,53,96,0.14); }
+  .top-bar{ position:absolute; top:2vh; left:0; right:0; display:flex; justify-content:space-between; align-items:center; padding:0 3vw; z-index:5; }
+  .star-counter{ background:#fff; border-radius:30px; padding:.5em 1.1em; font-weight:800; font-size:1.3rem; box-shadow: var(--shadow); display:flex; align-items:center; gap:.3em; color:#c98a00; }
+
+  /* ---------- start screen ---------- */
+  .title-emoji{ font-size:4rem; animation: bob 3s ease-in-out infinite; }
+  .title{ font-size: clamp(2rem, 6vw, 3.4rem); text-align:center; color:#fff; text-shadow: 0 4px 0 rgba(58,53,96,0.25); font-weight:900; line-height:1.15; margin:.2em 0; }
+  .subtitle{ font-size:1.4rem; color:#fff; text-shadow: 0 2px 0 rgba(58,53,96,0.2); margin-bottom:1em; font-weight:700; }
+  .start-actions{ display:flex; gap:1.2em; margin-top:1.4em; flex-wrap:wrap; justify-content:center; }
+  .character{ font-size:6rem; animation: bob 3s ease-in-out infinite; filter: drop-shadow(0 8px 6px rgba(0,0,0,.15)); }
+
+  /* ---------- map ---------- */
+  .map-title{ font-size:2rem; color:#fff; font-weight:900; text-shadow: 0 3px 0 rgba(58,53,96,.25); margin-bottom:1vh; position:absolute; top:12vh; width:100%; text-align:center; z-index:10; pointer-events:none;}
+  .station-wrap{ position:absolute; transform:translate(-50%, -50%); z-index:10; }
+  .station{
+    width:clamp(90px, 12vh, 140px); height:clamp(90px, 12vh, 140px);
+    border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: rgba(255, 255, 255, 0.92); box-shadow: var(--shadow); cursor:pointer; border:5px solid #fff;
+    font-size:1rem; text-align:center; padding:4px; transition: transform .15s ease;
+  }
+  .station.unlocked{ animation: pulse 2.4s ease-in-out infinite; }
+  .station .st-emoji{ font-size:2.4rem; }
+  .station .st-label{ font-weight:800; font-size:.72rem; margin-top:2px; color:var(--ink); line-height:1.05;}
+  .station.locked{ background: var(--lock); filter: grayscale(.3); cursor:default; animation:none; }
+  .station.locked .st-emoji{ opacity:.7; }
+  .station.done{ border-color: var(--gold); }
+  .station.done::after{ content:'✅'; position:absolute; top:-10px; right:-6px; font-size:1.6rem; }
+  .station:active{ transform: scale(.94); }
+
+  /* ---------- question screen ---------- */
+  .q-card{ background: var(--card-soft); border-radius:32px; box-shadow: var(--shadow); padding:3vh 4vw; width:min(760px,92vw); text-align:center; position:relative; }
+  .q-progress-wrap{ width:100%; height:22px; background:#e4e0f5; border-radius:20px; overflow:hidden; margin-bottom:1.2em; box-shadow: inset 0 2px 4px rgba(0,0,0,.08);}
+  .q-progress-bar{ height:100%; background: linear-gradient(90deg, var(--gold), var(--coral)); border-radius:20px; animation: fillBar .5s ease; }
+  .q-progress-label{ font-weight:800; margin-bottom:.3em; color: var(--ink); }
+  .q-station-emoji{ font-size:1.6rem; }
+  .q-prompt{ font-size: clamp(1.4rem,4vw,2rem); font-weight:800; margin:.5em 0; }
+  .q-visual{ font-size: clamp(2rem,7vw,3.6rem); letter-spacing:.15em; margin:.4em 0 .8em 0; line-height:1.3; }
+  .q-options{ display:flex; gap:1em; flex-wrap:wrap; justify-content:center; margin-top:1em; }
+  .opt-btn{
+    background:#fff; border:5px solid #d8d2f0; border-radius:20px; font-size: clamp(1.6rem,5vw,2.4rem); font-weight:900;
+    color: var(--ink); min-width:110px; min-height:100px; cursor:pointer; box-shadow: 0 6px 0 #d8d2f0; padding:.2em .5em;
+    transition: transform .1s ease;
+  }
+  .opt-btn:active{ transform: translateY(5px); box-shadow: 0 1px 0 #d8d2f0; }
+  .opt-btn.correct{ background: #d7f6dc; border-color: var(--success); box-shadow: 0 6px 0 var(--success); animation: pulse .4s ease; }
+  .opt-btn.wrong{ background: #ffe3d8; border-color: var(--coral-dark); box-shadow: 0 6px 0 var(--coral-dark); animation: shake .4s ease; }
+  .feedback-bubble{ position:absolute; top:-1.2em; left:50%; transform:translateX(-50%); background:#fff; border-radius:18px; padding:.5em 1em; font-weight:800; box-shadow: var(--shadow); white-space:nowrap; animation: popIn .3s ease; }
+  .char-row{ display:flex; align-items:center; justify-content:center; gap:.6em; margin-top:1em; }
+  .char-emoji{ font-size:3rem; transition: transform .2s ease; }
+  .char-emoji.happy{ animation: jiggle .5s ease; }
+  .char-emoji.think{ animation: bob 1s ease-in-out infinite; }
+
+  /* ---------- station complete / victory ---------- */
+  .complete-card{ background:#fff; border-radius:32px; box-shadow: var(--shadow); padding:5vh 6vw; text-align:center; max-width:90vw; }
+  .complete-emoji{ font-size:4.5rem; animation: pulse 1.2s ease-in-out infinite; }
+  .complete-title{ font-size:2rem; font-weight:900; margin:.3em 0; color: var(--ink); }
+  .stars-row{ font-size:2rem; margin:.5em 0 1em 0; letter-spacing:.1em; }
+  .medal{ font-size:3.5rem; margin:.3em 0; }
+
+  /* ---------- teacher panel ---------- */
+  .overlay{ position:fixed; inset:0; background: rgba(58,53,96,.55); z-index:50; display:flex; align-items:center; justify-content:center; }
+  .panel{ background:#fff; border-radius:26px; padding:3vh 3vw; width:min(480px,90vw); box-shadow: var(--shadow); text-align:left; }
+  .panel h2{ margin-top:0; color: var(--ink); }
+  .panel-row{ display:flex; justify-content:space-between; padding:.5em 0; border-bottom:2px dashed #eee; font-weight:700; }
+  .panel-actions{ display:flex; gap:1em; margin-top:1.4em; justify-content:center; flex-wrap:wrap; }
+
+  #confetti-canvas{ position:fixed; inset:0; pointer-events:none; z-index:60; }
+
+  .locked-hint{ position:absolute; bottom:-1.6em; left:50%; transform:translateX(-50%); font-size:.7rem; font-weight:700; color:#fff; background:rgba(58,53,96,.5); padding:.2em .6em; border-radius:10px; white-space:nowrap;}
+
+  @media (max-width:700px){
+    :root{ font-size:15px; }
+    .map-track{ height:70vh; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+const State = {
+  screen: 'start',
+  soundOn: true,
+  totalStars: 0,
+  currentStationId: null,
+  currentQuestion: null,
+  awaitingNext: false,
+  stats: { correct:0, wrong:0, tasksCompleted:0 },
+  stations: {
+    numbers:     { id:'numbers',     name:'Сандар ауылы',   emoji:'🔢', total:8,  index:0, unlocked:true,  done:false, stars:0 },
+    addition:    { id:'addition',    name:'Қосу бағы',      emoji:'🍎', total:10, index:0, unlocked:false, done:false, stars:0 },
+    subtraction: { id:'subtraction', name:'Азайту орманы',  emoji:'🐰', total:10, index:0, unlocked:false, done:false, stars:0 },
+    logic:       { id:'logic',       name:'Логика тауы',    emoji:'🧩', total:8,  index:0, unlocked:false, done:false, stars:0 },
+    palace:      { id:'palace',      name:'Жеңіс сарайы',   emoji:'🏆', total:0,  index:0, unlocked:false, done:false, stars:0 }
+  },
+  order: ['numbers','addition','subtraction','logic','palace']
+};
+
+/* =========================================================
+   SOUND MANAGER (Web Audio API, no external files)
+========================================================= */
+const SoundManager = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(AC) ctx = new AC();
+    }
+    return ctx;
+  }
+  function tone(freq, start, dur, type, vol){
+    if(!State.soundOn) return;
+    const c = getCtx(); if(!c) return;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, c.currentTime + start);
+    gain.gain.linearRampToValueAtTime(vol||0.18, c.currentTime + start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + start + dur);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(c.currentTime + start);
+    osc.stop(c.currentTime + start + dur + 0.05);
+  }
+  return {
+    correct(){ tone(523.25,0,.14,'triangle'); tone(659.25,.1,.16,'triangle'); tone(783.99,.2,.22,'triangle'); },
+    wrong(){ tone(330,0,.18,'sine',0.12); tone(294,.12,.2,'sine',0.1); },
+    levelComplete(){ tone(523,0,.12); tone(659,.13,.12); tone(784,.26,.12); tone(1047,.39,.3); },
+    finalFanfare(){ [523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f, i*0.16, .22, 'triangle', .2)); },
+    click(){ tone(440,0,.05,'square',0.06); },
+    toggle(){ State.soundOn = !State.soundOn; if(State.soundOn) tone(600,0,.08,'triangle'); }
+  };
+})();
+
+/* =========================================================
+   ANIMATION MANAGER (confetti)
+========================================================= */
+const AnimationManager = (function(){
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let running = false;
+  function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resize); resize();
+  const colors = ['#ff8f6b','#ffd35c','#7c6cff','#59c26a','#4fc3f7','#ff6bd6'];
+  function burst(count){
+    const cx = canvas.width/2;
+    for(let i=0;i<count;i++){
+      particles.push({
+        x: cx + (Math.random()-0.5)*canvas.width*0.6,
+        y: -20 - Math.random()*100,
+        vx: (Math.random()-0.5)*2,
+        vy: 2+Math.random()*3,
+        size: 6+Math.random()*8,
+        color: colors[Math.floor(Math.random()*colors.length)],
+        rot: Math.random()*360,
+        vr: (Math.random()-0.5)*10,
+        life: 0
+      });
+    }
+    if(!running){ running = true; loop(); }
+  }
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life++;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6);
+      ctx.restore();
+    });
+    particles = particles.filter(p=> p.y < canvas.height+40 && p.life < 260);
+    if(particles.length>0){ requestAnimationFrame(loop); } else { running = false; ctx.clearRect(0,0,canvas.width,canvas.height); }
+  }
+  return {
+    confetti(big){ burst(big? 140 : 60); }
+  };
+})();
+
+/* =========================================================
+   QUESTION GENERATOR
+========================================================= */
+const OBJECT_SETS = ['🍎','⭐','🎈','🐟','🌸','🍓','🐝','🍌','🌟','🍊'];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+// TҮЗЕТІЛДІ: makeOptions функциясы оңтайландырылды
+function makeOptions(correct, min, max){
+  const opts = new Set([correct]);
+  while(opts.size < 3){
+    const cand = randInt(Math.max(min,correct-2), Math.min(max,correct+2));
+    opts.add(cand);
+  }
+  return shuffle(Array.from(opts));
+}
+
+function genCounting(){
+  const kind = randInt(0,1);
+  const emoji = OBJECT_SETS[randInt(0,OBJECT_SETS.length-1)];
+  if(kind===0){
+    const n = randInt(2,10);
+    return {
+      prompt: `Неше ${nameForEmoji(emoji)} бар?`,
+      visual: emoji.repeat(n),
+      options: makeOptions(n,1,10).map(String),
+      correct: String(n)
+    };
+  } else {
+    // match the written word for a number to its numeral (recognition)
+    const n = randInt(1,10);
+    return {
+      prompt: `«${NUMBER_WORDS[n]}» санын тап`,
+      visual: '🔍',
+      options: makeOptions(n,1,10).map(String),
+      correct: String(n)
+    };
+  }
+}
+const NUMBER_WORDS = ['','бір','екі','үш','төрт','бес','алты','жеті','сегіз','тоғыз','он'];
+function nameForEmoji(e){
+  const names = {'🍎':'алма','⭐':'жұлдыз','🎈':'шар','🐟':'балық','🌸':'гүл','🍓':'бүлдірген','🐝':'ара','🍌':'банан','🌟':'жұлдызша','🍊':'мандарин'};
+  return names[e]||'зат';
+}
+
+function genAddition(){
+  let a,b;
+  do{
+    a = randInt(1,9);
+    b = randInt(1,9);
+  } while(a+b>10);
+  const sum = a+b;
+  const useVisual = Math.random()<0.5;
+  const emoji = OBJECT_SETS[randInt(0,OBJECT_SETS.length-1)];
+  return {
+    prompt: useVisual ? `Барлығы неше ${nameForEmoji(emoji)} болды?` : `${a} + ${b} = ?`,
+    visual: useVisual ? `${emoji.repeat(a)} + ${emoji.repeat(b)}` : `${a} + ${b} = ❓`,
+    options: makeOptions(sum,0,10).map(String),
+    correct: String(sum)
+  };
+}
+
+function genSubtraction(){
+  const a = randInt(2,10);
+  const b = randInt(0,a);
+  const diff = a-b;
+  const useVisual = Math.random()<0.5;
+  const emoji = '🥕'; 
+  const emojiName = nameForEmoji(emoji) === 'зат' ? 'сәбіз' : nameForEmoji(emoji); // TҮЗЕТІЛДІ: Сәбіз сөзін қауіпсіз шығару
+  return {
+    prompt: useVisual ? `Қанша ${emojiName} қалды?` : `${a} − ${b} = ?`,
+    visual: useVisual ? `${emoji.repeat(a)}  → −${b}` : `${a} − ${b} = ❓`,
+    options: makeOptions(diff,0,10).map(String),
+    correct: String(diff)
+  };
+}
+
+function genLogic(){
+  const kind = randInt(0,3);
+  if(kind===0){
+    // sequence 1..N missing one number
+    const start = randInt(1,4);
+    const seq = [start,start+1,start+2,start+3,start+4];
+    const missIdx = randInt(1,3);
+    const answer = seq[missIdx];
+    const display = seq.map((n,i)=> i===missIdx ? '❓' : n).join(' ');
+    return {
+      prompt: 'Жетіспейтін санды тап',
+      visual: display,
+      options: makeOptions(answer,1,12).map(String),
+      correct: String(answer)
+    };
+  } else if(kind===1){
+    // pattern with two alternating fruits
+    const a = OBJECT_SETS[randInt(0,4)];
+    const b = OBJECT_SETS[randInt(5,9)];
+    const pattern = [a,b,a,b,a];
+    const display = pattern.join(' ') + ' ❓';
+    const correct = a;
+    const wrong1 = b;
+    
+    // TҮЗЕТІЛДІ: wrong2 нұсқасы міндетті түрде a мен b-дан бөлек болуын қамтамасыз ету
+    let wrong2 = OBJECT_SETS[randInt(0, OBJECT_SETS.length - 1)];
+    while(wrong2 === a || wrong2 === b) {
+        wrong2 = OBJECT_SETS[randInt(0, OBJECT_SETS.length - 1)];
+    }
+
+    return {
+      prompt: 'Заңдылықты жалғастыр. Келесісі не?',
+      visual: display,
+      options: shuffle([correct,wrong1,wrong2]),
+      correct: correct
+    };
+  } else if(kind===2){
+    const start = randInt(1,7);
+    const seq = [start, start+1, null, start+3];
+    const answer = start+2;
+    const display = `${start}  ${start+1}  ❓  ${start+3}`;
+    return {
+      prompt: 'Қай сан жетіспейді?',
+      visual: display,
+      options: makeOptions(answer,1,12).map(String),
+      correct: String(answer)
+    };
+  } else {
+    // comparison of quantities
+    const emoji = OBJECT_SETS[randInt(0,OBJECT_SETS.length-1)];
+    let n1 = randInt(2,7), n2 = randInt(2,7);
+    while(n1===n2){ n2 = randInt(2,7); }
+    const groupA = emoji.repeat(n1);
+    const groupB = emoji.repeat(n2);
+    const correct = n1>n2 ? 'A' : 'B';
+    return {
+      prompt: 'Қайсысында зат көп?',
+      visual: `A: ${groupA}\nB: ${groupB}`,
+      options: ['A','B'],
+      correct: correct,
+      isCompare: true
+    };
+  }
+}
+
+const GENERATORS = {
+  numbers: genCounting,
+  addition: genAddition,
+  subtraction: genSubtraction,
+  logic: genLogic
+};
+
+/* =========================================================
+   SCORE MANAGER
+========================================================= */
+const ScoreManager = {
+  addStar(){
+    State.totalStars++;
+    const st = State.stations[State.currentStationId];
+    if(st) st.stars++;
+    State.stats.correct++;
+  },
+  addWrong(){ State.stats.wrong++; },
+  addTaskDone(){ State.stats.tasksCompleted++; }
+};
+
+/* =========================================================
+   LEVEL MANAGER
+========================================================= */
+const LevelManager = {
+  startStation(id){
+    const st = State.stations[id];
+    if(!st.unlocked) return;
+    State.currentStationId = id;
+    st.index = 0;
+    State.currentQuestion = GENERATORS[id] ? GENERATORS[id]() : null;
+    State.screen = 'question';
+    render();
+  },
+  nextQuestion(){
+    const st = State.stations[State.currentStationId];
+    st.index++;
+    if(st.index >= st.total){
+      this.completeStation();
+    } else {
+      State.currentQuestion = GENERATORS[st.id]();
+      State.screen = 'question';
+      render();
+    }
+  },
+  completeStation(){
+    const st = State.stations[State.currentStationId];
+    st.done = true;
+    const idx = State.order.indexOf(st.id);
+    const nextId = State.order[idx+1];
+    if(nextId){ State.stations[nextId].unlocked = true; }
+    State.screen = 'stationComplete';
+    SoundManager.levelComplete();
+    AnimationManager.confetti(false);
+    render();
+  },
+  goToMap(){
+    State.screen = 'map';
+    State.currentStationId = null;
+    render();
+  }
+};
+
+/* =========================================================
+   UI MANAGER — render functions
+========================================================= */
+const app = document.getElementById('app');
+
+function topBar(showBack){
+  return `<div class="top-bar" style="z-index:20;">
+    <div>${showBack ? `<button class="btn-icon" id="btnBack">🏠</button>` : ''}</div>
+    <div style="display:flex; gap:.6em; align-items:center;">
+      <div class="star-counter">⭐ ${State.totalStars}</div>
+      <button class="btn-icon" id="btnSound" title="Дыбыс">${State.soundOn ? '🔊' : '🔇'}</button>
+      <button class="btn-icon" id="btnSettings" title="Мұғалімге">⚙️</button>
+    </div>
+  </div>`;
+}
+
+function renderStart(){
+  app.innerHTML = `
+    <div class="screen">
+      ${topBar(false)}
+      <div class="title-emoji">🌟</div>
+      <div class="title">САНДАР ӘЛЕМІНЕ<br>САЯХАТ</div>
+      <div class="subtitle">Сандарды бірге үйренейік!</div>
+      <div class="character">🧒</div>
+      <div class="start-actions">
+        <button class="btn btn-primary" id="btnStart">▶️ БАСТАУ</button>
+      </div>
+    </div>
+  `;
+  bindTopBar();
+  document.getElementById('btnStart').onclick = ()=>{ SoundManager.click(); State.screen='map'; render(); };
+}
+
+const STATION_POS = [
+  {top:'12%', left:'19%'},
+  {top:'45%', left:'46.5%'},
+  {top:'13%', left:'61.5%'},
+  {top:'54%', left:'82%'},
+  {top:'24%', left:'88.5%'}
+];
+
+function renderMap(){
+  const stationsHtml = State.order.map((id,i)=>{
+    const st = State.stations[id];
+    const pos = STATION_POS[i];
+    const cls = st.done ? 'done' : (st.unlocked ? 'unlocked' : 'locked');
+    return `<div class="station-wrap" style="top:${pos.top}; left:${pos.left};">
+        <div class="station ${cls}" data-id="${id}">
+          <div class="st-emoji">${st.unlocked ? st.emoji : '🔒'}</div>
+          <div class="st-label">${st.name}</div>
+          ${!st.unlocked ? `<div class="locked-hint">Алдымен алдыңғысын аяқта</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+  
+  app.innerHTML = `
+    <div class="map-screen-container">
+      <div class="map-wrapper">
+        ${stationsHtml}
+      </div>
+    </div>
+    ${topBar(true)}
+  `;
+  bindTopBar();
+  document.getElementById('btnBack').onclick = ()=>{ SoundManager.click(); State.screen='start'; render(); };
+  document.querySelectorAll('.station').forEach(el=>{
+    el.onclick = ()=>{
+      const id = el.getAttribute('data-id');
+      const st = State.stations[id];
+      if(!st.unlocked) return;
+      SoundManager.click();
+      if(id==='palace'){ showVictory(); }
+      else { LevelManager.startStation(id); }
+    };
+  });
+}
+
+function renderQuestion(){
+  const st = State.stations[State.currentStationId];
+  const q = State.currentQuestion;
+  const pct = Math.round((st.index/st.total)*100);
+  const visualHtml = q.visual ? q.visual.split('\n').map(l=>`<div>${l}</div>`).join('') : '';
+  app.innerHTML = `
+    <div class="screen">
+      ${topBar(true)}
+      <div class="q-card">
+        <div class="q-progress-label">${st.emoji} ${st.name} &nbsp; · &nbsp; ${st.index+1} / ${st.total}</div>
+        <div class="q-progress-wrap"><div class="q-progress-bar" style="width:${pct}%;"></div></div>
+        <div class="q-prompt">${q.prompt}</div>
+        <div class="q-visual">${visualHtml}</div>
+        <div class="q-options" id="optsWrap">
+          ${q.options.map((opt,i)=>`<button class="opt-btn" data-i="${i}" data-val="${opt}">${opt}</button>`).join('')}
+        </div>
+        <div class="char-row">
+          <div class="char-emoji think" id="charEmoji">🤔</div>
+        </div>
+      </div>
+    </div>
+  `;
+  bindTopBar();
+  document.getElementById('btnBack').onclick = ()=>{ SoundManager.click(); LevelManager.goToMap(); };
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.onclick = ()=> handleAnswer(btn);
+  });
+}
+
+function handleAnswer(btn){
+  if(State.awaitingNext) return;
+  const q = State.currentQuestion;
+  const val = btn.getAttribute('data-val');
+  const isCorrect = val === q.correct;
+  const charEmoji = document.getElementById('charEmoji');
+  if(isCorrect){
+    State.awaitingNext = true;
+    btn.classList.add('correct');
+    ScoreManager.addStar();
+    ScoreManager.addTaskDone();
+    SoundManager.correct();
+    charEmoji.textContent = '🎉';
+    charEmoji.className = 'char-emoji happy';
+    showFeedback(btn.closest('.q-card'), '🎉 Жарайсың! Дұрыс жауап!');
+    spawnStar(btn);
+    setTimeout(()=>{ State.awaitingNext=false; LevelManager.nextQuestion(); }, 1100);
+  } else {
+    btn.classList.add('wrong');
+    ScoreManager.addWrong();
+    SoundManager.wrong();
+    charEmoji.textContent = '🤔';
+    charEmoji.className = 'char-emoji think';
+    showFeedback(btn.closest('.q-card'), '🤔 Қайта ойланып көр!');
+    setTimeout(()=>{ btn.classList.remove('wrong'); }, 650);
+  }
+}
+
+function showFeedback(card, text){
+  const old = card.querySelector('.feedback-bubble');
+  if(old) old.remove();
+  const bubble = document.createElement('div');
+  bubble.className = 'feedback-bubble';
+  bubble.textContent = text;
+  card.appendChild(bubble);
+  setTimeout(()=>{ bubble.remove(); }, 1300);
+}
+
+function spawnStar(btn){
+  const rect = btn.getBoundingClientRect();
+  const star = document.createElement('div');
+  star.textContent = '⭐';
+  star.style.position='fixed';
+  star.style.left = (rect.left+rect.width/2-14)+'px';
+  star.style.top = (rect.top)+'px';
+  star.style.fontSize='2rem';
+  star.style.zIndex = 80;
+  star.style.animation = 'floatUp 1s ease forwards';
+  document.body.appendChild(star);
+  setTimeout(()=> star.remove(), 1000);
+}
+
+function renderStationComplete(){
+  const st = State.stations[State.currentStationId];
+  const idx = State.order.indexOf(st.id);
+  const nextId = State.order[idx+1];
+  const allFourDone = ['numbers','addition','subtraction','logic'].every(id=>State.stations[id].done);
+  app.innerHTML = `
+    <div class="screen">
+      ${topBar(true)}
+      <div class="complete-card">
+        <div class="complete-emoji">🎉</div>
+        <div class="complete-title">Керемет!<br>Сен «${st.name}» бекетін аяқтадың!</div>
+        <div class="stars-row">${'⭐'.repeat(Math.min(st.stars,12))}&nbsp; (${st.stars} жұлдыз)</div>
+        <div class="start-actions">
+          ${nextId && nextId !== 'palace' ? `<button class="btn btn-primary" id="btnNextStation">КЕЛЕСІ БЕКЕТ →</button>` : ''}
+          <button class="btn btn-secondary" id="btnToMap">🗺️ Картаға оралу</button>
+        </div>
+      </div>
+    </div>
+  `;
+  bindTopBar();
+  document.getElementById('btnBack').onclick = ()=>{ LevelManager.goToMap(); };
+  document.getElementById('btnToMap').onclick = ()=>{ SoundManager.click(); LevelManager.goToMap(); };
+  const nextBtn = document.getElementById('btnNextStation');
+  if(nextBtn){
+    nextBtn.onclick = ()=>{
+      SoundManager.click();
+      LevelManager.startStation(nextId);
+    };
+  }
+}
+
+function showVictory(){
+  State.stations.palace.done = true;
+  State.screen = 'victory';
+  render();
+  SoundManager.finalFanfare();
+  AnimationManager.confetti(true);
+}
+
+function renderVictory(){
+  app.innerHTML = `
+    <div class="screen">
+      ${topBar(true)}
+      <div class="complete-card">
+        <div class="complete-emoji">🏆</div>
+        <div class="complete-title">ҚҰТТЫҚТАЙМЫЗ!<br>Сен — МАТЕМАТИКА ШЕБЕРІСІҢ!</div>
+        <div class="stars-row">${'⭐'.repeat(Math.min(State.totalStars,20))}</div>
+        <div>Жиналған жұлдыздар: <b>${State.totalStars}</b></div>
+        <div class="medal">🏅</div>
+        <div style="font-weight:800;">«Сандар әлемінің шебері»</div>
+        <div class="start-actions">
+          <button class="btn btn-primary" id="btnReplay">🔄 Қайта ойнау</button>
+          <button class="btn btn-secondary" id="btnToMap2">🗺️ Картаға оралу</button>
+        </div>
+      </div>
+    </div>
+  `;
+  bindTopBar();
+  document.getElementById('btnBack').onclick = ()=>{ LevelManager.goToMap(); };
+  document.getElementById('btnToMap2').onclick = ()=>{ SoundManager.click(); LevelManager.goToMap(); };
+  document.getElementById('btnReplay').onclick = ()=>{
+    SoundManager.click();
+    resetGame(false);
+    State.screen='map';
+    render();
+  };
+}
+
+function renderTeacherPanel(){
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'teacherOverlay';
+  overlay.innerHTML = `
+    <div class="panel">
+      <h2>⚙️ Мұғалімге арналған бөлім</h2>
+      <div class="panel-row"><span>Жалпы ұпай (жұлдыз)</span><span>⭐ ${State.totalStars}</span></div>
+      <div class="panel-row"><span>Дұрыс жауап саны</span><span>${State.stats.correct}</span></div>
+      <div class="panel-row"><span>Қате жауап саны</span><span>${State.stats.wrong}</span></div>
+      <div class="panel-row"><span>Орындалған тапсырма</span><span>${State.stats.tasksCompleted}</span></div>
+      <div class="panel-actions">
+        <button class="btn btn-secondary" id="btnResetGame">🔄 Қайта бастау</button>
+        <button class="btn btn-primary" id="btnCloseTeacher">Жабу</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('btnCloseTeacher').onclick = ()=> overlay.remove();
+  document.getElementById('btnResetGame').onclick = ()=>{
+    resetGame(true);
+    overlay.remove();
+    render();
+  };
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+}
+
+function resetGame(full){
+  State.totalStars = 0;
+  State.stats = { correct:0, wrong:0, tasksCompleted:0 };
+  State.order.forEach(id=>{
+    const st = State.stations[id];
+    st.index = 0; st.done = false; st.stars = 0;
+    st.unlocked = (id==='numbers');
+  });
+  State.currentStationId = null;
+  State.currentQuestion = null;
+  State.screen = full ? 'start' : 'map';
+}
+
+function bindTopBar(){
+  const soundBtn = document.getElementById('btnSound');
+  if(soundBtn) soundBtn.onclick = ()=>{ SoundManager.toggle(); render(); };
+  const settingsBtn = document.getElementById('btnSettings');
+  if(settingsBtn) settingsBtn.onclick = ()=>{ SoundManager.click(); renderTeacherPanel(); };
+}
+
+/* =========================================================
+   MAIN RENDER DISPATCH
+========================================================= */
+function render(){
+  switch(State.screen){
+    case 'start': renderStart(); break;
+    case 'map': renderMap(); break;
+    case 'question': renderQuestion(); break;
+    case 'stationComplete': renderStationComplete(); break;
+    case 'victory': renderVictory(); break;
+    default: renderStart();
+  }
+}
+
+render();
+
+})();
+</script>
+</body>
+</html>
