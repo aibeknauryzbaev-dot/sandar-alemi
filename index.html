@@ -6,18 +6,13 @@
 <title>Сандар Әлеміне Саяхат</title>
 <style>
   :root{
-    --sky-top:#8ecbff;
-    --sky-bottom:#eaf7ff;
-    --sun:#ffd35c;
-    --grass:#8fd67f;
-    --grass-dark:#6cc25a;
     --coral:#ff8f6b;
     --coral-dark:#ff7048;
     --plum:#7c6cff;
     --plum-dark:#6a58f0;
     --ink:#3a3560;
-    --card:#ffffff;
-    --card-soft:#fff8ee;
+    --card: rgba(255, 255, 255, 0.95);
+    --card-soft: rgba(255, 248, 238, 0.95);
     --gold:#ffcc33;
     --lock:#b9b3d6;
     --success:#59c26a;
@@ -31,33 +26,46 @@
     -webkit-tap-highlight-color: transparent;
     user-select:none;
     overflow:hidden;
-    background-color: var(--sky-top);
+    background-color: #8ecbff;
     color: var(--ink);
   }
-  #app{ 
-    position:relative; width:100%; height:100%; overflow:hidden; 
-    background: url('fon1.jpeg') no-repeat center center;
-    background-size: cover;
-  }
+  #app{ position:relative; width:100%; height:100%; overflow:hidden; }
 
-  /* ---------- map background ---------- */
-  .map-screen-container {
+  .bg-main {
+    position: absolute; inset: 0;
+    background: url('fon1.jpeg') center/cover no-repeat;
+    z-index: 0;
+  }
+  .map-container {
     position: absolute; inset: 0;
     overflow-x: auto; overflow-y: hidden;
-    background: #a9d9ff; z-index: 1;
+    z-index: 1;
+    background-color: #8ecbff;
+    display: flex;
+    justify-content: flex-start;
   }
-  .map-wrapper {
-    position: relative; height: 100%;
-    aspect-ratio: 16 / 9;
-    background: url('fon2.jpeg') no-repeat center center;
-    background-size: cover;
-    min-width: 1000px; /* Смартфондарда көлденең айналдыру үшін */
-    margin: 0 auto;
+  @media (min-aspect-ratio: 16/9) {
+    .map-container { justify-content: center; }
   }
+  .map-content {
+    height: 100vh;
+    width: calc(100vh * 16 / 9); /* 16:9 пропорциясы қатаң сақталады */
+    flex-shrink: 0;
+    position: relative;
+    background: url('fon2.jpeg') center/100% 100% no-repeat;
+  }
+
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-3%);} }
+  @keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
+  @keyframes popIn{ from{transform:scale(.4); opacity:0;} to{transform:scale(1); opacity:1;} }
+  @keyframes floatUp{ from{transform:translateY(0); opacity:1;} to{transform:translateY(-70px); opacity:0;} }
+  @keyframes jiggle{ 0%,100%{transform:rotate(0deg);} 25%{transform:rotate(-4deg);} 75%{transform:rotate(4deg);} }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+  @keyframes fillBar{ from{width:0%;} }
+  @keyframes station-pulse { 0%,100%{transform:translate(-50%, -50%) scale(1);} 50%{transform:translate(-50%, -50%) scale(1.06);} }
 
   .screen{ position:relative; z-index:1; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2vh 3vw; animation: popIn .35s ease; }
 
-  /* ---------- buttons ---------- */
   .btn{
     border:none; border-radius:22px; cursor:pointer; font-family:inherit; font-weight:700;
     color:#fff; padding:1.1em 2.2em; font-size:1.3rem; box-shadow: var(--shadow);
@@ -69,42 +77,38 @@
   .btn-icon{
     width:64px; height:64px; border-radius:50%; border:none; font-size:1.6rem; cursor:pointer;
     background: #fff; box-shadow: var(--shadow); display:flex; align-items:center; justify-content:center;
+    pointer-events: auto;
   }
   .btn-icon:active{ transform: translateY(4px); box-shadow: 0 4px 0 rgba(58,53,96,0.14); }
-  .top-bar{ position:absolute; top:2vh; left:0; right:0; display:flex; justify-content:space-between; align-items:center; padding:0 3vw; z-index:5; }
-  .star-counter{ background:#fff; border-radius:30px; padding:.5em 1.1em; font-weight:800; font-size:1.3rem; box-shadow: var(--shadow); display:flex; align-items:center; gap:.3em; color:#c98a00; }
+  .top-bar{ position:absolute; top:2vh; left:0; right:0; display:flex; justify-content:space-between; align-items:center; padding:0 3vw; z-index:10; pointer-events: none;}
+  .star-counter{ background:#fff; border-radius:30px; padding:.5em 1.1em; font-weight:800; font-size:1.3rem; box-shadow: var(--shadow); display:flex; align-items:center; gap:.3em; color:#c98a00; pointer-events: auto;}
 
-  /* ---------- start screen ---------- */
-  .title-emoji{ font-size:4rem; animation: bob 3s ease-in-out infinite; }
-  .title{ font-size: clamp(2rem, 6vw, 3.4rem); text-align:center; color:#fff; text-shadow: 0 4px 0 rgba(58,53,96,0.25); font-weight:900; line-height:1.15; margin:.2em 0; }
-  .subtitle{ font-size:1.4rem; color:#fff; text-shadow: 0 2px 0 rgba(58,53,96,0.2); margin-bottom:1em; font-weight:700; }
+  .title-emoji{ font-size:4rem; animation: bob 3s ease-in-out infinite; text-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+  .title{ font-size: clamp(2rem, 6vw, 3.4rem); text-align:center; color:#fff; text-shadow: 0 4px 8px rgba(58,53,96,0.5); font-weight:900; line-height:1.15; margin:.2em 0; }
+  .subtitle{ font-size:1.4rem; color:#fff; text-shadow: 0 2px 4px rgba(58,53,96,0.5); margin-bottom:1em; font-weight:700; }
   .start-actions{ display:flex; gap:1.2em; margin-top:1.4em; flex-wrap:wrap; justify-content:center; }
   .character{ font-size:6rem; animation: bob 3s ease-in-out infinite; filter: drop-shadow(0 8px 6px rgba(0,0,0,.15)); }
 
-  /* ---------- map ---------- */
-  .map-title{ font-size:2rem; color:#fff; font-weight:900; text-shadow: 0 3px 0 rgba(58,53,96,.25); margin-bottom:1vh; position:absolute; top:12vh; width:100%; text-align:center; z-index:10; pointer-events:none;}
-  .station-wrap{ position:absolute; transform:translate(-50%, -50%); z-index:10; }
   .station{
-    width:clamp(90px, 12vh, 140px); height:clamp(90px, 12vh, 140px);
+    position:absolute; width:16vmin; height:16vmin; min-width:110px; min-height:110px; max-width:150px; max-height:150px;
     border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background: rgba(255, 255, 255, 0.92); box-shadow: var(--shadow); cursor:pointer; border:5px solid #fff;
+    background: var(--card); box-shadow: var(--shadow); cursor:pointer; border:6px solid #fff;
     font-size:1rem; text-align:center; padding:4px; transition: transform .15s ease;
+    transform: translate(-50%, -50%); /* Ортасына дәл келтіру үшін */
   }
-  .station.unlocked{ animation: pulse 2.4s ease-in-out infinite; }
+  .station.unlocked{ animation: station-pulse 2.4s ease-in-out infinite; }
   .station .st-emoji{ font-size:2.4rem; }
-  .station .st-label{ font-weight:800; font-size:.72rem; margin-top:2px; color:var(--ink); line-height:1.05;}
+  .station .st-label{ font-weight:800; font-size:.8rem; margin-top:2px; color:var(--ink); line-height:1.05;}
   .station.locked{ background: var(--lock); filter: grayscale(.3); cursor:default; animation:none; }
   .station.locked .st-emoji{ opacity:.7; }
   .station.done{ border-color: var(--gold); }
   .station.done::after{ content:'✅'; position:absolute; top:-10px; right:-6px; font-size:1.6rem; }
-  .station:active{ transform: scale(.94); }
+  .station:active{ transform: translate(-50%, -50%) scale(.94); }
 
-  /* ---------- question screen ---------- */
   .q-card{ background: var(--card-soft); border-radius:32px; box-shadow: var(--shadow); padding:3vh 4vw; width:min(760px,92vw); text-align:center; position:relative; }
   .q-progress-wrap{ width:100%; height:22px; background:#e4e0f5; border-radius:20px; overflow:hidden; margin-bottom:1.2em; box-shadow: inset 0 2px 4px rgba(0,0,0,.08);}
   .q-progress-bar{ height:100%; background: linear-gradient(90deg, var(--gold), var(--coral)); border-radius:20px; animation: fillBar .5s ease; }
   .q-progress-label{ font-weight:800; margin-bottom:.3em; color: var(--ink); }
-  .q-station-emoji{ font-size:1.6rem; }
   .q-prompt{ font-size: clamp(1.4rem,4vw,2rem); font-weight:800; margin:.5em 0; }
   .q-visual{ font-size: clamp(2rem,7vw,3.6rem); letter-spacing:.15em; margin:.4em 0 .8em 0; line-height:1.3; }
   .q-options{ display:flex; gap:1em; flex-wrap:wrap; justify-content:center; margin-top:1em; }
@@ -122,14 +126,12 @@
   .char-emoji.happy{ animation: jiggle .5s ease; }
   .char-emoji.think{ animation: bob 1s ease-in-out infinite; }
 
-  /* ---------- station complete / victory ---------- */
-  .complete-card{ background:#fff; border-radius:32px; box-shadow: var(--shadow); padding:5vh 6vw; text-align:center; max-width:90vw; }
+  .complete-card{ background:var(--card); border-radius:32px; box-shadow: var(--shadow); padding:5vh 6vw; text-align:center; max-width:90vw; }
   .complete-emoji{ font-size:4.5rem; animation: pulse 1.2s ease-in-out infinite; }
   .complete-title{ font-size:2rem; font-weight:900; margin:.3em 0; color: var(--ink); }
   .stars-row{ font-size:2rem; margin:.5em 0 1em 0; letter-spacing:.1em; }
   .medal{ font-size:3.5rem; margin:.3em 0; }
 
-  /* ---------- teacher panel ---------- */
   .overlay{ position:fixed; inset:0; background: rgba(58,53,96,.55); z-index:50; display:flex; align-items:center; justify-content:center; }
   .panel{ background:#fff; border-radius:26px; padding:3vh 3vw; width:min(480px,90vw); box-shadow: var(--shadow); text-align:left; }
   .panel h2{ margin-top:0; color: var(--ink); }
@@ -137,12 +139,10 @@
   .panel-actions{ display:flex; gap:1em; margin-top:1.4em; justify-content:center; flex-wrap:wrap; }
 
   #confetti-canvas{ position:fixed; inset:0; pointer-events:none; z-index:60; }
-
-  .locked-hint{ position:absolute; bottom:-1.6em; left:50%; transform:translateX(-50%); font-size:.7rem; font-weight:700; color:#fff; background:rgba(58,53,96,.5); padding:.2em .6em; border-radius:10px; white-space:nowrap;}
+  .locked-hint{ position:absolute; bottom:-1.8em; left:50%; transform:translateX(-50%); font-size:.7rem; font-weight:700; color:#fff; background:rgba(58,53,96,.8); padding:.2em .6em; border-radius:10px; white-space:nowrap;}
 
   @media (max-width:700px){
     :root{ font-size:15px; }
-    .map-track{ height:70vh; }
   }
 </style>
 </head>
@@ -154,9 +154,6 @@
 (function(){
 "use strict";
 
-/* =========================================================
-   GAME STATE
-========================================================= */
 const State = {
   screen: 'start',
   soundOn: true,
@@ -175,9 +172,6 @@ const State = {
   order: ['numbers','addition','subtraction','logic','palace']
 };
 
-/* =========================================================
-   SOUND MANAGER (Web Audio API, no external files)
-========================================================= */
 const SoundManager = (function(){
   let ctx = null;
   function getCtx(){
@@ -211,9 +205,6 @@ const SoundManager = (function(){
   };
 })();
 
-/* =========================================================
-   ANIMATION MANAGER (confetti)
-========================================================= */
 const AnimationManager = (function(){
   const canvas = document.getElementById('confetti-canvas');
   const ctx = canvas.getContext('2d');
@@ -258,10 +249,8 @@ const AnimationManager = (function(){
   };
 })();
 
-/* =========================================================
-   QUESTION GENERATOR
-========================================================= */
 const OBJECT_SETS = ['🍎','⭐','🎈','🐟','🌸','🍓','🐝','🍌','🌟','🍊'];
+const NUMBER_WORDS = ['','бір','екі','үш','төрт','бес','алты','жеті','сегіз','тоғыз','он'];
 
 function shuffle(arr){
   const a = arr.slice();
@@ -272,8 +261,6 @@ function shuffle(arr){
   return a;
 }
 function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-
-// TҮЗЕТІЛДІ: makeOptions функциясы оңтайландырылды
 function makeOptions(correct, min, max){
   const opts = new Set([correct]);
   while(opts.size < 3){
@@ -282,10 +269,14 @@ function makeOptions(correct, min, max){
   }
   return shuffle(Array.from(opts));
 }
+function nameForEmoji(e){
+  const names = {'🍎':'алма','⭐':'жұлдыз','🎈':'шар','🐟':'балық','🌸':'гүл','🍓':'бүлдірген','🐝':'ара','🍌':'банан','🌟':'жұлдызша','🍊':'мандарин'};
+  return names[e]||'зат';
+}
 
 function genCounting(){
-  const kind = randInt(0,1);
   const emoji = OBJECT_SETS[randInt(0,OBJECT_SETS.length-1)];
+  const kind = randInt(0,1); // Тек 2 нұсқа қалды
   if(kind===0){
     const n = randInt(2,10);
     return {
@@ -295,7 +286,6 @@ function genCounting(){
       correct: String(n)
     };
   } else {
-    // match the written word for a number to its numeral (recognition)
     const n = randInt(1,10);
     return {
       prompt: `«${NUMBER_WORDS[n]}» санын тап`,
@@ -304,11 +294,6 @@ function genCounting(){
       correct: String(n)
     };
   }
-}
-const NUMBER_WORDS = ['','бір','екі','үш','төрт','бес','алты','жеті','сегіз','тоғыз','он'];
-function nameForEmoji(e){
-  const names = {'🍎':'алма','⭐':'жұлдыз','🎈':'шар','🐟':'балық','🌸':'гүл','🍓':'бүлдірген','🐝':'ара','🍌':'банан','🌟':'жұлдызша','🍊':'мандарин'};
-  return names[e]||'зат';
 }
 
 function genAddition(){
@@ -333,10 +318,9 @@ function genSubtraction(){
   const b = randInt(0,a);
   const diff = a-b;
   const useVisual = Math.random()<0.5;
-  const emoji = '🥕'; 
-  const emojiName = nameForEmoji(emoji) === 'зат' ? 'сәбіз' : nameForEmoji(emoji); // TҮЗЕТІЛДІ: Сәбіз сөзін қауіпсіз шығару
+  const emoji = '🥕';
   return {
-    prompt: useVisual ? `Қанша ${emojiName} қалды?` : `${a} − ${b} = ?`,
+    prompt: useVisual ? `Қанша ${nameForEmoji(emoji)==='зат'?'сәбіз':'сәбіз'} қалды?` : `${a} − ${b} = ?`,
     visual: useVisual ? `${emoji.repeat(a)}  → −${b}` : `${a} − ${b} = ❓`,
     options: makeOptions(diff,0,10).map(String),
     correct: String(diff)
@@ -346,64 +330,86 @@ function genSubtraction(){
 function genLogic(){
   const kind = randInt(0,3);
   if(kind===0){
-    // sequence 1..N missing one number
-    const start = randInt(1,4);
-    const seq = [start,start+1,start+2,start+3,start+4];
+    // 1. Тізбектегі жетіспейтін санды табу
+    const start = randInt(1,5);
+    const seq = [start, start+1, start+2, start+3, start+4];
     const missIdx = randInt(1,3);
     const answer = seq[missIdx];
-    const display = seq.map((n,i)=> i===missIdx ? '❓' : n).join(' ');
+    const display = seq.map((n,i)=> i===missIdx ? '❓' : n).join(' &nbsp; ');
+    
+    let opts = new Set([answer]);
+    // ШЕКСІЗ ЦИКЛДЫҢ АЛДЫН АЛУ: Нұсқаларды кеңірек диапазоннан аламыз
+    while(opts.size < 3) {
+        let cand = answer + randInt(-3, 4);
+        if (cand > 0) opts.add(cand);
+    }
+    
     return {
       prompt: 'Жетіспейтін санды тап',
       visual: display,
-      options: makeOptions(answer,1,12).map(String),
+      options: shuffle(Array.from(opts)).map(String),
       correct: String(answer)
     };
   } else if(kind===1){
-    // pattern with two alternating fruits
+    // 2. Суреттердегі заңдылықты жалғастыру
+    const subKind = randInt(0, 1);
     const a = OBJECT_SETS[randInt(0,4)];
     const b = OBJECT_SETS[randInt(5,9)];
-    const pattern = [a,b,a,b,a];
-    const display = pattern.join(' ') + ' ❓';
-    const correct = a;
-    const wrong1 = b;
     
-    // TҮЗЕТІЛДІ: wrong2 нұсқасы міндетті түрде a мен b-дан бөлек болуын қамтамасыз ету
+    let pattern, correct;
+    if (subKind === 0) {
+        pattern = [a, b, a, b, a];
+        correct = b; 
+    } else {
+        pattern = [a, a, b, a, a];
+        correct = b; 
+    }
+    const display = pattern.join(' ') + ' ❓';
+    
+    const wrong1 = a;
     let wrong2 = OBJECT_SETS[randInt(0, OBJECT_SETS.length - 1)];
     while(wrong2 === a || wrong2 === b) {
         wrong2 = OBJECT_SETS[randInt(0, OBJECT_SETS.length - 1)];
     }
-
+    
     return {
       prompt: 'Заңдылықты жалғастыр. Келесісі не?',
       visual: display,
-      options: shuffle([correct,wrong1,wrong2]),
+      options: shuffle([correct, wrong1, wrong2]),
       correct: correct
     };
   } else if(kind===2){
-    const start = randInt(1,7);
-    const seq = [start, start+1, null, start+3];
-    const answer = start+2;
-    const display = `${start}  ${start+1}  ❓  ${start+3}`;
+    // 3. Секіріп санау
+    const step = randInt(2,3); 
+    const start = randInt(1,4);
+    const answer = start + step*3;
+    const display = `${start} &nbsp; ${start+step} &nbsp; ${start+step*2} &nbsp; ❓`;
+    
+    let opts = new Set([answer]);
+    // ШЕКСІЗ ЦИКЛДЫҢ АЛДЫН АЛУ
+    while(opts.size < 3) {
+        let cand = answer + randInt(-4, 4);
+        if (cand > 0) opts.add(cand);
+    }
+    
     return {
-      prompt: 'Қай сан жетіспейді?',
+      prompt: 'Заңдылықты жалғастыр',
       visual: display,
-      options: makeOptions(answer,1,12).map(String),
+      options: shuffle(Array.from(opts)).map(String),
       correct: String(answer)
     };
   } else {
-    // comparison of quantities
-    const emoji = OBJECT_SETS[randInt(0,OBJECT_SETS.length-1)];
-    let n1 = randInt(2,7), n2 = randInt(2,7);
-    while(n1===n2){ n2 = randInt(2,7); }
-    const groupA = emoji.repeat(n1);
-    const groupB = emoji.repeat(n2);
-    const correct = n1>n2 ? 'A' : 'B';
+    // 4. Ең үлкен санды табу
+    const correctNum = randInt(7, 15);
+    let w1 = randInt(1, correctNum - 1);
+    let w2 = randInt(1, correctNum - 1);
+    while(w1 === w2) w2 = randInt(1, correctNum - 1);
+    
     return {
-      prompt: 'Қайсысында зат көп?',
-      visual: `A: ${groupA}\nB: ${groupB}`,
-      options: ['A','B'],
-      correct: correct,
-      isCompare: true
+      prompt: 'Ең үлкен санды тап',
+      visual: '🔍 🔢',
+      options: shuffle([correctNum, w1, w2]).map(String),
+      correct: String(correctNum)
     };
   }
 }
@@ -415,9 +421,6 @@ const GENERATORS = {
   logic: genLogic
 };
 
-/* =========================================================
-   SCORE MANAGER
-========================================================= */
 const ScoreManager = {
   addStar(){
     State.totalStars++;
@@ -429,9 +432,6 @@ const ScoreManager = {
   addTaskDone(){ State.stats.tasksCompleted++; }
 };
 
-/* =========================================================
-   LEVEL MANAGER
-========================================================= */
 const LevelManager = {
   startStation(id){
     const st = State.stations[id];
@@ -471,13 +471,10 @@ const LevelManager = {
   }
 };
 
-/* =========================================================
-   UI MANAGER — render functions
-========================================================= */
 const app = document.getElementById('app');
 
 function topBar(showBack){
-  return `<div class="top-bar" style="z-index:20;">
+  return `<div class="top-bar">
     <div>${showBack ? `<button class="btn-icon" id="btnBack">🏠</button>` : ''}</div>
     <div style="display:flex; gap:.6em; align-items:center;">
       <div class="star-counter">⭐ ${State.totalStars}</div>
@@ -489,6 +486,7 @@ function topBar(showBack){
 
 function renderStart(){
   app.innerHTML = `
+    <div class="bg-main"></div>
     <div class="screen">
       ${topBar(false)}
       <div class="title-emoji">🌟</div>
@@ -504,12 +502,13 @@ function renderStart(){
   document.getElementById('btnStart').onclick = ()=>{ SoundManager.click(); State.screen='map'; render(); };
 }
 
+// Суреттегі дөңгелек тақталарға дәл түсетін координаттар
 const STATION_POS = [
-  {top:'12%', left:'19%'},
-  {top:'45%', left:'46.5%'},
-  {top:'13%', left:'61.5%'},
-  {top:'54%', left:'82%'},
-  {top:'24%', left:'88.5%'}
+  {top:'12.5%', left:'18.7%'},  // Numbers (үйлер)
+  {top:'46.5%', left:'46.7%'},  // Addition (алма)
+  {top:'13.5%', left:'61.7%'},  // Subtraction (сәбіз/қоян)
+  {top:'55.5%', left:'81.7%'},  // Logic (фигуралар)
+  {top:'25.0%', left:'87.8%'}   // Palace (сарай)
 ];
 
 function renderMap(){
@@ -517,22 +516,22 @@ function renderMap(){
     const st = State.stations[id];
     const pos = STATION_POS[i];
     const cls = st.done ? 'done' : (st.unlocked ? 'unlocked' : 'locked');
-    return `<div class="station-wrap" style="top:${pos.top}; left:${pos.left};">
-        <div class="station ${cls}" data-id="${id}">
-          <div class="st-emoji">${st.unlocked ? st.emoji : '🔒'}</div>
-          <div class="st-label">${st.name}</div>
-          ${!st.unlocked ? `<div class="locked-hint">Алдымен алдыңғысын аяқта</div>` : ''}
-        </div>
+    return `<div class="station ${cls}" style="top:${pos.top}; left:${pos.left};" data-id="${id}">
+        <div class="st-emoji">${st.unlocked ? st.emoji : '🔒'}</div>
+        <div class="st-label">${st.name}</div>
+        ${!st.unlocked ? `<div class="locked-hint">Алдымен алдыңғысын аяқта</div>` : ''}
       </div>`;
   }).join('');
   
   app.innerHTML = `
-    <div class="map-screen-container">
-      <div class="map-wrapper">
+    <div class="map-container">
+      <div class="map-content">
         ${stationsHtml}
       </div>
     </div>
-    ${topBar(true)}
+    <div style="position:absolute; inset:0; pointer-events:none; z-index:2;">
+      ${topBar(true)}
+    </div>
   `;
   bindTopBar();
   document.getElementById('btnBack').onclick = ()=>{ SoundManager.click(); State.screen='start'; render(); };
@@ -554,6 +553,7 @@ function renderQuestion(){
   const pct = Math.round((st.index/st.total)*100);
   const visualHtml = q.visual ? q.visual.split('\n').map(l=>`<div>${l}</div>`).join('') : '';
   app.innerHTML = `
+    <div class="bg-main"></div>
     <div class="screen">
       ${topBar(true)}
       <div class="q-card">
@@ -635,6 +635,7 @@ function renderStationComplete(){
   const nextId = State.order[idx+1];
   const allFourDone = ['numbers','addition','subtraction','logic'].every(id=>State.stations[id].done);
   app.innerHTML = `
+    <div class="bg-main"></div>
     <div class="screen">
       ${topBar(true)}
       <div class="complete-card">
@@ -642,7 +643,7 @@ function renderStationComplete(){
         <div class="complete-title">Керемет!<br>Сен «${st.name}» бекетін аяқтадың!</div>
         <div class="stars-row">${'⭐'.repeat(Math.min(st.stars,12))}&nbsp; (${st.stars} жұлдыз)</div>
         <div class="start-actions">
-          ${nextId && nextId !== 'palace' ? `<button class="btn btn-primary" id="btnNextStation">КЕЛЕСІ БЕКЕТ →</button>` : ''}
+          ${nextId ? `<button class="btn btn-primary" id="btnNextStation">КЕЛЕСІ БЕКЕТ →</button>` : ''}
           <button class="btn btn-secondary" id="btnToMap">🗺️ Картаға оралу</button>
         </div>
       </div>
@@ -655,7 +656,14 @@ function renderStationComplete(){
   if(nextBtn){
     nextBtn.onclick = ()=>{
       SoundManager.click();
-      LevelManager.startStation(nextId);
+      if(nextId==='palace' && allFourDone){
+        State.stations.palace.unlocked = true;
+        showVictory();
+      } else if(nextId==='palace'){
+        LevelManager.goToMap();
+      } else {
+        LevelManager.startStation(nextId);
+      }
     };
   }
 }
@@ -670,6 +678,7 @@ function showVictory(){
 
 function renderVictory(){
   app.innerHTML = `
+    <div class="bg-main"></div>
     <div class="screen">
       ${topBar(true)}
       <div class="complete-card">
@@ -744,9 +753,6 @@ function bindTopBar(){
   if(settingsBtn) settingsBtn.onclick = ()=>{ SoundManager.click(); renderTeacherPanel(); };
 }
 
-/* =========================================================
-   MAIN RENDER DISPATCH
-========================================================= */
 function render(){
   switch(State.screen){
     case 'start': renderStart(); break;
